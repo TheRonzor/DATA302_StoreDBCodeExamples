@@ -27,10 +27,17 @@ def RunQuery(sql, params=None):
     return results
 
 def RebuildTables():
+    
+    RunAction("DROP TABLE IF EXISTS tOrderDetail;")
+    RunAction("DROP TABLE IF EXISTS tOrder;")
     RunAction("DROP TABLE IF EXISTS tCust;")
+    RunAction("DROP TABLE IF EXISTS tZip;")
+    RunAction("DROP TABLE IF EXISTS tState;")
+    RunAction("DROP TABLE IF EXISTS tProd;")
+    
     sql = """
     CREATE TABLE tCust (
-        cust_id INTEGER PRIMARY KEY,
+        cust_id INTEGER PRIMARY KEY AUTOINCREMENT,
         first TEXT NOT NULL,
         last TEXT NOT NULL,
         address TEXT NOT NULL,
@@ -38,7 +45,6 @@ def RebuildTables():
     );"""
     RunAction(sql)
     
-    RunAction("DROP TABLE IF EXISTS tZip;")
     sql = """
     CREATE TABLE tZip (
         zip TEXT PRIMARY KEY CHECK(length(zip)==5),
@@ -47,7 +53,6 @@ def RebuildTables():
     );"""
     RunAction(sql)
     
-    RunAction("DROP TABLE IF EXISTS tState;")
     sql = """
     CREATE TABLE tState (
         st TEXT PRIMARY KEY CHECK(length(st)==2),
@@ -55,16 +60,14 @@ def RebuildTables():
     );"""
     RunAction(sql)
     
-    RunAction("DROP TABLE IF EXISTS tOrder;")
     sql = """
     CREATE TABLE tOrder (
-        order_id INTEGER PRIMARY KEY,
+        order_id INTEGER PRIMARY KEY AUTOINCREMENT,
         cust_id INTEGER NOT NULL REFERENCES tCust(cust_id),
         date TEXT NOT NULL CHECK(date LIKE '____-__-__')
     );"""
     RunAction(sql)
     
-    RunAction("DROP TABLE IF EXISTS tOrderDetail;")
     sql = """
     CREATE TABLE tOrderDetail (
         order_id INTEGER NOT NULL REFERENCES tOrder(order_id),
@@ -74,7 +77,6 @@ def RebuildTables():
     );"""
     RunAction(sql)
     
-    RunAction("DROP TABLE IF EXISTS tProd;")
     sql = """
     CREATE TABLE tProd (
         prod_id INTEGER PRIMARY KEY,

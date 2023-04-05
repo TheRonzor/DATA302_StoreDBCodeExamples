@@ -10,13 +10,15 @@ def Connect():
 
 def RunAction(sql, params=None):
     conn, curs = Connect()
+    
     if params is not None:
         curs.execute(sql, params)
     else:
         curs.execute(sql)
+    
     conn.close()
     return
-
+    
 def RunQuery(sql, params=None):
     conn, curs = Connect()
     if params is not None:
@@ -27,18 +29,23 @@ def RunQuery(sql, params=None):
     return results
 
 def RebuildTables():
+    RunAction("DROP TABLE IF EXISTS tOrderDetail;")
+    RunAction("DROP TABLE IF EXISTS tOrder;")
+    RunAction("DROP TABLE IF EXISTS tProd;")
     RunAction("DROP TABLE IF EXISTS tCust;")
+    RunAction("DROP TABLE IF EXISTS tZip;")
+    RunAction("DROP TABLE IF EXISTS tState;")
+    
     sql = """
     CREATE TABLE tCust (
-        cust_id INTEGER PRIMARY KEY,
+        cust_id INTEGER PRIMARY KEY AUTOINCREMENT,
         first TEXT NOT NULL,
         last TEXT NOT NULL,
-        address TEXT NOT NULL,
+        addr TEXT NOT NULL,
         zip TEXT NOT NULL REFERENCES tZip(zip)
     );"""
     RunAction(sql)
     
-    RunAction("DROP TABLE IF EXISTS tZip;")
     sql = """
     CREATE TABLE tZip (
         zip TEXT PRIMARY KEY CHECK(length(zip)==5),
@@ -47,7 +54,6 @@ def RebuildTables():
     );"""
     RunAction(sql)
     
-    RunAction("DROP TABLE IF EXISTS tState;")
     sql = """
     CREATE TABLE tState (
         st TEXT PRIMARY KEY CHECK(length(st)==2),
@@ -55,16 +61,14 @@ def RebuildTables():
     );"""
     RunAction(sql)
     
-    RunAction("DROP TABLE IF EXISTS tOrder;")
     sql = """
     CREATE TABLE tOrder (
-        order_id INTEGER PRIMARY KEY,
+        order_id INTEGER PRIMARY KEY AUTOINCREMENT,
         cust_id INTEGER NOT NULL REFERENCES tCust(cust_id),
         date TEXT NOT NULL CHECK(date LIKE '____-__-__')
     );"""
     RunAction(sql)
     
-    RunAction("DROP TABLE IF EXISTS tOrderDetail;")
     sql = """
     CREATE TABLE tOrderDetail (
         order_id INTEGER NOT NULL REFERENCES tOrder(order_id),
@@ -74,7 +78,6 @@ def RebuildTables():
     );"""
     RunAction(sql)
     
-    RunAction("DROP TABLE IF EXISTS tProd;")
     sql = """
     CREATE TABLE tProd (
         prod_id INTEGER PRIMARY KEY,
@@ -83,16 +86,16 @@ def RebuildTables():
     );"""
     RunAction(sql)
     
-    return 
+    return
 
 def LoadTable(df, table_name):
-    '''df should have the same column names as the database table does 
-            add more detailed documentation
-    '''
+    '''df should have column names identical to the database table column names'''
+    
     conn, curs = Connect()
     
-    sql = "INSERT INTO " + table_name + ' (' + ','.join(list(df.columns)) + \
-      ') VALUES (:' + ',:'.join(list(df.columns)) + ');'
+    sql = "INSERT INTO " + table_name + \
+      ' (' + ','.join(list(df.columns)) +') VALUES (:' + \
+      ',:'.join(list(df.columns)) + ');'
     
     try:
         for i, row in enumerate(df.to_dict(orient='records')):
@@ -117,12 +120,15 @@ def LoadLookups():
     tProd.columns = ['prod_id', 'prod_desc', 'unit_price']
     tZip.columns = ['zip', 'city', 'st']
 
-    LoadTable(tProd, 'tProd')
-    LoadTable(tState, 'tState')
-    LoadTable(tZip, 'tZip')
+    if not LoadTable(tProd, 'tProd'):
+        return False
+    if not LoadTable(tState,'tState'):
+        return False
+    if not LoadTable(tZip, 'tZip'):
+        return False
     
-    return
-
+    return True
+    
 def RebuildDB():
     RebuildTables()
     LoadLookups()

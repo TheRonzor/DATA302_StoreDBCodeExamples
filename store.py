@@ -1,6 +1,9 @@
 import sqlite3
 import pandas as pd
 from traceback import print_exc as pe
+import numpy as np
+
+sqlite3.register_adapter(np.int64, lambda x: int(x))
 
 def Connect():
     conn = sqlite3.connect('../databases/store.db')
